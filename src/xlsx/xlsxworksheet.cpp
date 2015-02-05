@@ -64,6 +64,7 @@ WorksheetPrivate::WorksheetPrivate(Worksheet *p, Worksheet::CreateFlag flag)
   , windowProtection(false), showFormulas(false), showGridLines(true), showRowColHeaders(true)
   , showZeros(true), rightToLeft(false), tabSelected(false), showRuler(false)
   , showOutlineSymbols(true), showWhiteSpace(true), urlPattern(QStringLiteral("^([fh]tt?ps?://)|(mailto:)|(file://)"))
+  , comments(AbstractOOXmlFile::F_NewFromScratch)
 {
     previous_row = 0;
 
@@ -106,9 +107,9 @@ void WorksheetPrivate::calculateSpans() const
                 }
             }
         }
-        if (comments.contains(row_num)) {
+        if (comments.hasRow(row_num)) {
             for (int col_num = dimension.firstColumn(); col_num <= dimension.lastColumn(); col_num++) {
-                if (comments[row_num].contains(col_num)) {
+                if (comments.hasComment(row_num,col_num)) {
                     if (span_max == -1) {
                         span_min = col_num;
                         span_max = col_num;
@@ -1234,6 +1235,7 @@ void Worksheet::saveToXmlFile(QIODevice *device) const
         cf.saveToXml(writer);
     d->saveXmlDataValidations(writer);
     d->saveXmlHyperlinks(writer);
+	saveXmlComments(writer);
     d->saveXmlDrawings(writer);
 
     writer.writeEndElement();//worksheet
@@ -1244,7 +1246,7 @@ void WorksheetPrivate::saveXmlSheetData(QXmlStreamWriter &writer) const
 {
     calculateSpans();
     for (int row_num = dimension.firstRow(); row_num <= dimension.lastRow(); row_num++) {
-        if (!(cellTable.contains(row_num) || comments.contains(row_num) || rowsInfo.contains(row_num))) {
+        if (!(cellTable.contains(row_num) || comments.hasRow(row_num) || rowsInfo.contains(row_num))) {
             //Only process rows with cell data / comments / formatting
             continue;
         }
@@ -1433,6 +1435,16 @@ void WorksheetPrivate::saveXmlHyperlinks(QXmlStreamWriter &writer) const
     }
 
     writer.writeEndElement();//hyperlinks
+}
+void Worksheet::saveXmlComments(QXmlStreamWriter &writer) const {
+	auto SheetsList= workbook()->getSheetsByTypes(AbstractSheet::ST_WorkSheet);
+	int idx;
+	for (idx = 0; idx < SheetsList.size(); ++idx) {
+		if (SheetsList.at(idx).data()==this) break;
+	}
+	if (idx == SheetsList.size()) return;
+	Q_D(const Worksheet);
+	d->relationships->addWorksheetRelationship(QStringLiteral("/comments"), QStringLiteral("../comments%1.xml").arg(idx + 1));
 }
 
 void WorksheetPrivate::saveXmlDrawings(QXmlStreamWriter &writer) const
@@ -2300,6 +2312,33 @@ bool Worksheet::loadFromXmlFile(QIODevice *device)
 
     d->validateDimension();
     return true;
+}
+
+bool Worksheet::writeComment(const CellReference &row_column, const Comment& value) {
+	if (!row_column.isValid())
+		return false;
+	return writeComment(row_column.row(), row_column.column(), value);
+}
+
+bool Worksheet::writeComment(int row, int column, const Comment& value) {
+	Q_D(Worksheet);
+	if (d->checkDimensions(row, column))
+		return false;
+	d->comments.setComment(row,column, value);
+	return true;
+}
+
+bool Worksheet::writeComment(int row, int column, const QString& auth, const RichString& txt) {
+	return writeComment(row, column, Comment(auth, txt));
+}
+
+bool Worksheet::writeComment(const CellReference &row_column, const QString& auth, const RichString& txt) {
+	return writeComment(row_column, Comment(auth, txt));
+}
+
+const SpreadSheetComment& Worksheet::commentList() const {
+	Q_D(const Worksheet);
+	return d->comments;
 }
 
 /*

@@ -42,7 +42,8 @@
 #include "xlsxdatavalidation.h"
 #include "xlsxconditionalformatting.h"
 #include "xlsxcellformula.h"
-
+#include "xlsxcomment.h"
+#include "xlsxspreadsheetcomments.h"
 #include <QImage>
 #include <QSharedPointer>
 #include <QRegularExpression>
@@ -168,6 +169,7 @@ public:
     void saveXmlHyperlinks(QXmlStreamWriter &writer) const;
     void saveXmlDrawings(QXmlStreamWriter &writer) const;
     void saveXmlDataValidations(QXmlStreamWriter &writer) const;
+	
     int rowPixelsSize(int row) const;
     int colPixelsSize(int col) const;
 
@@ -178,6 +180,7 @@ public:
     void loadXmlSheetFormatProps(QXmlStreamReader &reader);
     void loadXmlSheetViews(QXmlStreamReader &reader);
     void loadXmlHyperlinks(QXmlStreamReader &reader);
+	
 
     QList<QSharedPointer<XlsxRowInfo> > getRowInfoList(int rowFirst, int rowLast);
     QList <QSharedPointer<XlsxColumnInfo> > getColumnInfoList(int colFirst, int colLast);
@@ -187,7 +190,7 @@ public:
     SharedStrings *sharedStrings() const;
 
     QMap<int, QMap<int, QSharedPointer<Cell> > > cellTable;
-    QMap<int, QMap<int, QString> > comments;
+	SpreadSheetComment comments;
     QMap<int, QMap<int, QSharedPointer<XlsxHyperlinkData> > > urlTable;
     QList<CellRange> merges;
     QMap<int, QSharedPointer<XlsxRowInfo> > rowsInfo;

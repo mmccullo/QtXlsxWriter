@@ -42,7 +42,7 @@
 
 #include <QSharedPointer>
 
-namespace QXlsx {
+QT_BEGIN_NAMESPACE_XLSX
 
 class XLSX_AUTOTEST_EXPORT AbstractSheetPrivate : public AbstractOOXmlFilePrivate
 {
@@ -60,5 +60,5 @@ public:
     AbstractSheet::SheetType type;
 };
 
-}
+QT_END_NAMESPACE_XLSX
 #endif // XLSXABSTRACTSHEET_P_H

@@ -43,7 +43,7 @@ class DataValidation;
 class ConditionalFormatting;
 class Chart;
 class CellReference;
-
+class Comment;
 class DocumentPrivate;
 class Q_XLSX_EXPORT Document : public QObject
 {
@@ -56,6 +56,10 @@ public:
     Document(QIODevice *device, QObject *parent=0);
     ~Document();
 
+	bool writeComment(const CellReference &cell, const Comment& value);
+	bool writeComment(int row, int col, const Comment& value);
+	bool writeComment(const CellReference &cell, const QString& author, const RichString& value);
+	bool writeComment(int row, int col, const QString& author, const RichString& value);
     bool write(const CellReference &cell, const QVariant &value, const Format &format=Format());
     bool write(int row, int col, const QVariant &value, const Format &format=Format());
     QVariant read(const CellReference &cell) const;

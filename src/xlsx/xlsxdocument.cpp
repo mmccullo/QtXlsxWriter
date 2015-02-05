@@ -41,7 +41,8 @@
 #include "xlsxchart.h"
 #include "xlsxzipreader_p.h"
 #include "xlsxzipwriter_p.h"
-
+#include "xlsxworksheet.h"
+#include "xlsxspreadsheetcomments.h"
 #include <QFile>
 #include <QPointF>
 #include <QBuffer>
@@ -255,7 +256,18 @@ bool DocumentPrivate::savePackage(QIODevice *device) const
         zipWriter.addFile(QStringLiteral("xl/worksheets/sheet%1.xml").arg(i+1), sheet->saveToXmlData());
         Relationships *rel = sheet->relationships();
         if (!rel->isEmpty())
-            zipWriter.addFile(QStringLiteral("xl/worksheets/_rels/sheet%1.xml.rels").arg(i+1), rel->saveToXmlData());
+			zipWriter.addFile(QStringLiteral("xl/worksheets/_rels/sheet%1.xml.rels").arg(i + 1), rel->saveToXmlData());
+
+		//worksheet comments
+		{
+			const SpreadSheetComment& commList = dynamic_cast<const Worksheet*>(sheet.data())->commentList();
+			if (!commList.isEmpty()) {
+				contentTypes->addCommentName(QStringLiteral("comments%1").arg(i + 1));
+				zipWriter.addFile(QStringLiteral("xl/comments%1.xml").arg(i + 1), commList.saveToXmlData());
+			}
+			
+		}
+		
     }
 
     //save chartsheet xml files
@@ -318,6 +330,8 @@ bool DocumentPrivate::savePackage(QIODevice *device) const
     // save styles xml file
     contentTypes->addStyles();
     zipWriter.addFile(QStringLiteral("xl/styles.xml"), workbook->styles()->saveToXmlData());
+	// save comments xml files
+
 
     // save theme xml file
     contentTypes->addTheme();
@@ -1041,6 +1055,29 @@ bool Document::saveAs(QIODevice *device) const
 Document::~Document()
 {
     delete d_ptr;
+}
+
+bool Document::writeComment(const CellReference &cell, const Comment& value) {
+	if (Worksheet *sheet = currentWorksheet())
+		return sheet->writeComment(cell, value);
+	return false;
+}
+bool Document::writeComment(int row, int col, const Comment& value) {
+	if (Worksheet *sheet = currentWorksheet())
+		return sheet->writeComment(row, col, value);
+	return false;
+}
+
+bool Document::writeComment(const CellReference &cell, const QString& author, const RichString& value) {
+	if (Worksheet *sheet = currentWorksheet())
+		return sheet->writeComment(cell, author, value);
+	return false;
+}
+
+bool Document::writeComment(int row, int col, const QString& author, const RichString& value) {
+	if (Worksheet *sheet = currentWorksheet())
+		return sheet->writeComment(row, col, author, value);
+	return false;
 }
 
 QT_END_NAMESPACE_XLSX

@@ -39,7 +39,8 @@ class QDateTime;
 class QUrl;
 class QImage;
 class WorksheetTest;
-
+class QXmlStreamWriter;
+class QXmlStreamReader;
 QT_BEGIN_NAMESPACE_XLSX
 class DocumentPrivate;
 class Workbook;
@@ -51,8 +52,9 @@ class CellRange;
 class RichString;
 class Relationships;
 class Chart;
-
+class Comment;
 class WorksheetPrivate;
+class SpreadSheetComment;
 class Q_XLSX_EXPORT Worksheet : public AbstractSheet
 {
     Q_DECLARE_PRIVATE(Worksheet)
@@ -82,6 +84,11 @@ public:
 
     bool writeHyperlink(const CellReference &row_column, const QUrl &url, const Format &format=Format(), const QString &display=QString(), const QString &tip=QString());
     bool writeHyperlink(int row, int column, const QUrl &url, const Format &format=Format(), const QString &display=QString(), const QString &tip=QString());
+
+	bool writeComment(const CellReference &row_column, const Comment& value);
+	bool writeComment(int row, int column, const Comment& value);
+	bool writeComment(int row, int column, const QString& auth, const RichString& txt);
+	bool writeComment(const CellReference &row_column, const QString& auth, const RichString& txt);
 
     bool addDataValidation(const DataValidation &validation);
     bool addConditionalFormatting(const ConditionalFormatting &cf);
@@ -142,14 +149,15 @@ public:
 
     ~Worksheet();
 
-
+	void saveXmlComments(QXmlStreamWriter &writer) const;
+	void loadXmlComments(QXmlStreamReader &reader);
 private:
     friend class DocumentPrivate;
     friend class Workbook;
     friend class ::WorksheetTest;
     Worksheet(const QString &sheetName, int sheetId, Workbook *book, CreateFlag flag);
     Worksheet *copy(const QString &distName, int distId) const;
-
+	const SpreadSheetComment& commentList() const;
     void saveToXmlFile(QIODevice *device) const;
     bool loadFromXmlFile(QIODevice *device);
 };
