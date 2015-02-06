@@ -169,6 +169,7 @@ namespace QXlsx {
         void saveXmlHyperlinks(QXmlStreamWriter &writer) const;
         void saveXmlDrawings(QXmlStreamWriter &writer) const;
         void saveXmlDataValidations(QXmlStreamWriter &writer) const;
+        void saveXmlComments(QXmlStreamWriter &writer) const;
 
         int rowPixelsSize(int row) const;
         int colPixelsSize(int col) const;
@@ -180,6 +181,7 @@ namespace QXlsx {
         void loadXmlSheetFormatProps(QXmlStreamReader &reader);
         void loadXmlSheetViews(QXmlStreamReader &reader);
         void loadXmlHyperlinks(QXmlStreamReader &reader);
+        void loadXmlComments(QXmlStreamReader &reader);
 
 
         QList<QSharedPointer<XlsxRowInfo> > getRowInfoList(int rowFirst, int rowLast);

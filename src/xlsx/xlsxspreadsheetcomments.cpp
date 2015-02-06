@@ -149,7 +149,74 @@ void SpreadSheetComment::saveShapeToXmlFile(QIODevice *device) const
     if (d->isEmpty()) return;
     QXmlStreamWriter writer(device);
     writer.writeStartDocument(QStringLiteral("1.0"));
-
+    writer.writeStartElement(QStringLiteral("xml"));
+    writer.writeAttribute(QStringLiteral("xmlns:v"),
+        QStringLiteral("urn:schemas-microsoft-com:vml"));
+    writer.writeAttribute(QStringLiteral("xmlns:o"),
+        QStringLiteral("urn:schemas-microsoft-com:office:office"));
+    writer.writeAttribute(QStringLiteral("xmlns:x"),
+        QStringLiteral("urn:schemas-microsoft-com:office:excel"));
+    writer.writeStartElement(QStringLiteral("o:shapelayout"));
+    writer.writeEmptyElement(QStringLiteral("o:idmap"));
+    writer.writeAttribute(QStringLiteral("v:ext"), QStringLiteral("edit"));
+    writer.writeAttribute(QStringLiteral("data"), QStringLiteral("1"));
+    writer.writeEndElement(); //o:shapelayout
+    writer.writeStartElement(QStringLiteral("v:shapetype"));
+    writer.writeAttribute(QStringLiteral("id"), QStringLiteral("_x0000_t202"));
+    writer.writeAttribute(QStringLiteral("coordsize"), QStringLiteral("21600,21600"));
+    writer.writeAttribute(QStringLiteral("o:spt"), QStringLiteral("202"));
+    writer.writeAttribute(QStringLiteral("path"), QStringLiteral("m,l,21600r21600,l21600,xe"));
+    writer.writeEmptyElement(QStringLiteral("v:stroke"));
+    writer.writeAttribute(QStringLiteral("joinstyle"), QStringLiteral("miter"));
+    writer.writeEmptyElement(QStringLiteral("v:path"));
+    writer.writeAttribute(QStringLiteral("gradientshapeok"), QStringLiteral("t"));
+    writer.writeAttribute(QStringLiteral("o:connecttype"), QStringLiteral("rect"));
+    writer.writeEndElement(); //v:shapetype
+    int commentsCounters = 0;
+    for (QMap<int, QMap<int, Comment* >* >::const_iterator i = d->comments().constBegin();
+        i != d->comments().constEnd(); ++i) {
+        for (QMap<int, Comment* >::const_iterator j = i.value()->constBegin();
+            j != i.value()->constEnd(); ++j) {
+            writer.writeStartElement(QStringLiteral("v:shape"));
+            writer.writeAttribute(QStringLiteral("id"), QStringLiteral("_x0000_s%1").arg(1024 + (++commentsCounters)));
+            writer.writeAttribute(QStringLiteral("type"), QStringLiteral("#_x0000_t202"));
+            writer.writeAttribute(QStringLiteral("style"), QStringLiteral("position:absolute;margin-left:59.25pt;margin-top:1.5pt;width:108pt;height:59.25pt;z-index:1;visibility:hidden"));
+            writer.writeAttribute(QStringLiteral("fillcolor"), QStringLiteral("#ffffe1"));
+            writer.writeAttribute(QStringLiteral("o:insetmode"), QStringLiteral("#auto"));
+            writer.writeEmptyElement(QStringLiteral("v:fill"));
+            writer.writeAttribute(QStringLiteral("color2"), QStringLiteral("#ffffe1"));
+            writer.writeEmptyElement(QStringLiteral("v:shadow"));
+            writer.writeAttribute(QStringLiteral("on"), QStringLiteral("t"));
+            writer.writeAttribute(QStringLiteral("color"), QStringLiteral("black"));
+            writer.writeAttribute(QStringLiteral("obscured"), QStringLiteral("t"));
+            writer.writeEmptyElement(QStringLiteral("v:path"));
+            writer.writeAttribute(QStringLiteral("o:connecttype"), QStringLiteral("none"));
+            writer.writeStartElement(QStringLiteral("v:textbox"));
+            writer.writeAttribute(QStringLiteral("style"), QStringLiteral("mso-direction-alt:auto"));
+            writer.writeEmptyElement(QStringLiteral("div"));
+            writer.writeAttribute(QStringLiteral("style"), QStringLiteral("text-align:left"));
+            writer.writeEndElement(); //v:textbox
+            writer.writeStartElement(QStringLiteral("x:ClientData"));
+            writer.writeAttribute(QStringLiteral("ObjectType"), QStringLiteral("Note"));
+            writer.writeEmptyElement(QStringLiteral("x:MoveWithCells"));
+            writer.writeEmptyElement(QStringLiteral("x:SizeWithCells"));
+            writer.writeStartElement(QStringLiteral("x:Anchor"));
+            writer.writeCharacters(QStringLiteral("1, 15, 0, 2, 3, 31, 4, 1"));
+            writer.writeEndElement(); //x:Anchor
+            writer.writeStartElement(QStringLiteral("x:AutoFill"));
+            writer.writeCharacters(QStringLiteral("False"));
+            writer.writeEndElement(); //x:AutoFill
+            writer.writeStartElement(QStringLiteral("x:Row"));
+            writer.writeCharacters(QString::number(i.key()-1));
+            writer.writeEndElement(); //x:Row
+            writer.writeStartElement(QStringLiteral("x:Column"));
+            writer.writeCharacters(QString::number(j.key()-1));
+            writer.writeEndElement(); //x:Column
+            writer.writeEndElement(); //x:ClientData
+            writer.writeEndElement(); //v:shape
+        }
+    }
+    writer.writeEndElement(); //xml
 }
 void SpreadSheetComment::saveToXmlFile(QIODevice *device) const
 {

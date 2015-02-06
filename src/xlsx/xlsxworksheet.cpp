@@ -1166,6 +1166,7 @@ void Worksheet::saveToXmlFile(QIODevice *device) const
     writer.writeStartElement(QStringLiteral("worksheet"));
     writer.writeAttribute(QStringLiteral("xmlns"), QStringLiteral("http://schemas.openxmlformats.org/spreadsheetml/2006/main"));
     writer.writeAttribute(QStringLiteral("xmlns:r"), QStringLiteral("http://schemas.openxmlformats.org/officeDocument/2006/relationships"));
+    writer.writeAttribute(QStringLiteral("xmlns:xdr"), QStringLiteral("http://schemas.openxmlformats.org/drawingml/2006/spreadsheetDrawing"));
 
     //for Excel 2010
     //    writer.writeAttribute("xmlns:mc", "http://schemas.openxmlformats.org/markup-compatibility/2006");
@@ -1252,7 +1253,7 @@ void Worksheet::saveToXmlFile(QIODevice *device) const
         cf.saveToXml(writer);
     d->saveXmlDataValidations(writer);
     d->saveXmlHyperlinks(writer);
-    saveXmlComments(writer);
+    d->saveXmlComments(writer);
     d->saveXmlDrawings(writer);
 
     writer.writeEndElement();//worksheet
@@ -1460,16 +1461,19 @@ void WorksheetPrivate::saveXmlHyperlinks(QXmlStreamWriter &writer) const
 
     writer.writeEndElement();//hyperlinks
 }
-void Worksheet::saveXmlComments(QXmlStreamWriter &writer) const
+void WorksheetPrivate::saveXmlComments(QXmlStreamWriter &writer) const
 {
-    QList<QSharedPointer<AbstractSheet> > SheetsList = workbook()->getSheetsByTypes(AbstractSheet::ST_WorkSheet);
+    Q_Q(const Worksheet);
+    QList<QSharedPointer<AbstractSheet> > SheetsList = q->workbook()->getSheetsByTypes(AbstractSheet::ST_WorkSheet);
     int idx;
     for (idx = 0; idx < SheetsList.size(); ++idx) {
-        if (SheetsList.at(idx).data() == this) break;
+        if (SheetsList.at(idx).data() == q) break;
     }
     if (idx == SheetsList.size()) return;
-    Q_D(const Worksheet);
-    d->relationships->addWorksheetRelationship(QStringLiteral("/comments"), QStringLiteral("../comments%1.xml").arg(idx + 1));
+    relationships->addWorksheetRelationship(QStringLiteral("/comments"), QStringLiteral("../comments%1.xml").arg(idx + 1));
+    relationships->addWorksheetRelationship(QStringLiteral("/vmlDrawing"), QStringLiteral("../drawings/vmlDrawing%1.vml").arg(idx + 1));
+    writer.writeEmptyElement(QStringLiteral("legacyDrawing"));
+    writer.writeAttribute(QStringLiteral("r:id"), QStringLiteral("rId%1").arg(relationships->count()));
 }
 
 void WorksheetPrivate::saveXmlDrawings(QXmlStreamWriter &writer) const

@@ -15,7 +15,7 @@ CommentPrivate::CommentPrivate(Comment* q, const QString& auth, const RichString
 CommentPrivate::CommentPrivate(Comment* q, const CommentPrivate& other)
     : q_ptr(q)
     , m_Author(other.m_Author)
-    , m_Text(other.m_Author)
+    , m_Text(other.m_Text)
 {}
 Comment::Comment(const QString& auth, const RichString& txt)
 :d_ptr(new CommentPrivate(this, auth, txt))

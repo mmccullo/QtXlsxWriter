@@ -149,8 +149,7 @@ public:
 
     ~Worksheet();
 
-    void saveXmlComments(QXmlStreamWriter &writer) const;
-    void loadXmlComments(QXmlStreamReader &reader);
+    
 private:
     friend class DocumentPrivate;
     friend class Workbook;
