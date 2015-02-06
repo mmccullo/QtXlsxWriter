@@ -21,8 +21,8 @@ public:
     void moveComment(const CellReference& fromRowCol, int toRow, int toCol);
     void moveComment(const CellReference& fromRowCol, const CellReference& toRowCol);
     void moveComment(int fromRow, int fromCol, const CellReference& toRowCol);
-    virtual void saveToXmlFile(QIODevice *device) const override;
-    virtual bool loadFromXmlFile(QIODevice *device) override;
+    virtual void saveToXmlFile(QIODevice *device) const;
+    virtual bool loadFromXmlFile(QIODevice *device);
     void saveShapeToXmlFile(QIODevice *device) const;
     QByteArray saveShapeToXmlData()const;
     bool hasComment(int row, int col) const;
@@ -31,7 +31,7 @@ public:
 private:
     bool hasRow(int row) const;
     SpreadSheetComment(CreateFlag flag);
-
+    SpreadSheetComment(const SpreadSheetComment& other);
     friend class Worksheet;
     friend class WorksheetPrivate;
 };
