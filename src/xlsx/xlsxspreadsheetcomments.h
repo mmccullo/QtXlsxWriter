@@ -32,6 +32,8 @@ private:
     bool hasRow(int row) const;
     SpreadSheetComment(CreateFlag flag);
     SpreadSheetComment(const SpreadSheetComment& other);
+    //same as SharedStrings::writeRichStringPart_rPr that method should be either global or into RichString
+    void writeRichStringPart_rPr(QXmlStreamWriter &writer, const Format &format) const;
     friend class Worksheet;
     friend class WorksheetPrivate;
 };

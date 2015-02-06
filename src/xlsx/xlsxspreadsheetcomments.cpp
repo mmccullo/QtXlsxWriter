@@ -1,8 +1,10 @@
 #include "xlsxspreadsheetcomments.h"
 #include "xlsxspreadsheetcomments_p.h"
+#include "xlsxformat_p.h"
 #include "xlsxcellreference.h"
 #include <QXmlStreamWriter>
 #include <QBuffer>
+#include "xlsxcolor_p.h"
 QT_BEGIN_NAMESPACE_XLSX
 SpreadSheetCommentPrivate::SpreadSheetCommentPrivate(SpreadSheetComment* p, 
     SpreadSheetComment::CreateFlag flag)
@@ -258,26 +260,16 @@ void SpreadSheetComment::saveToXmlFile(QIODevice *device) const
                 QString::number(authorsList.indexOf(QRegExp(comColIter.value()->author(), 
                     Qt::CaseInsensitive))));
             writer.writeStartElement(QStringLiteral("text"));
-            commentLines = comColIter.value()->text().toPlainString().split(
-                QRegExp("(?:\r\n)|\r|\n"));
-            for (QStringList::const_iterator comLinIter = commentLines.constBegin();
-                comLinIter != commentLines.constEnd(); ++comLinIter) {
+            for (int comLinIter = 0; comLinIter < comColIter.value()->text().fragmentCount(); ++comLinIter){
                 writer.writeStartElement(QStringLiteral("r"));
                 //////////////////////////////////////////////////////////////////////////
                 writer.writeStartElement(QStringLiteral("rPr"));
-                writer.writeEmptyElement(QStringLiteral("sz"));
-                writer.writeAttribute(QStringLiteral("val"), QStringLiteral("9"));
-                writer.writeEmptyElement(QStringLiteral("color"));
-                writer.writeAttribute(QStringLiteral("indexed"), QStringLiteral("81"));
-                writer.writeEmptyElement(QStringLiteral("rFont"));
-                writer.writeAttribute(QStringLiteral("val"), QStringLiteral("Tahoma"));
-                writer.writeEmptyElement(QStringLiteral("family"));
-                writer.writeAttribute(QStringLiteral("val"), QStringLiteral("2"));
+                writeRichStringPart_rPr(writer, comColIter.value()->text().fragmentFormat(comLinIter));
                 writer.writeEndElement();//rPr
                 //////////////////////////////////////////////////////////////////////////
                 writer.writeStartElement(QStringLiteral("t"));
                 writer.writeAttribute(QStringLiteral("xml:space"), QStringLiteral("preserve"));
-                writer.writeCharacters(*comLinIter);
+                writer.writeCharacters(comColIter.value()->text().fragmentText(comLinIter));
                 writer.writeEndElement();//t
                 writer.writeEndElement();//r
             }
@@ -331,6 +323,68 @@ QByteArray SpreadSheetComment::saveShapeToXmlData() const
     buffer.open(QIODevice::WriteOnly);
     saveShapeToXmlFile(&buffer);
     return data;
+}
+void SpreadSheetComment::writeRichStringPart_rPr(QXmlStreamWriter &writer, const Format &format) const
+{
+    if (!format.hasFontData())
+        return;
+
+    if (format.fontBold())
+        writer.writeEmptyElement(QStringLiteral("b"));
+    if (format.fontItalic())
+        writer.writeEmptyElement(QStringLiteral("i"));
+    if (format.fontStrikeOut())
+        writer.writeEmptyElement(QStringLiteral("strike"));
+    if (format.fontOutline())
+        writer.writeEmptyElement(QStringLiteral("outline"));
+    if (format.boolProperty(FormatPrivate::P_Font_Shadow))
+        writer.writeEmptyElement(QStringLiteral("shadow"));
+    if (format.hasProperty(FormatPrivate::P_Font_Underline)) {
+        Format::FontUnderline u = format.fontUnderline();
+        if (u != Format::FontUnderlineNone) {
+            writer.writeEmptyElement(QStringLiteral("u"));
+            if (u == Format::FontUnderlineDouble)
+                writer.writeAttribute(QStringLiteral("val"), QStringLiteral("double"));
+            else if (u == Format::FontUnderlineSingleAccounting)
+                writer.writeAttribute(QStringLiteral("val"), QStringLiteral("singleAccounting"));
+            else if (u == Format::FontUnderlineDoubleAccounting)
+                writer.writeAttribute(QStringLiteral("val"), QStringLiteral("doubleAccounting"));
+        }
+    }
+    if (format.hasProperty(FormatPrivate::P_Font_Script)) {
+        Format::FontScript s = format.fontScript();
+        if (s != Format::FontScriptNormal) {
+            writer.writeEmptyElement(QStringLiteral("vertAlign"));
+            if (s == Format::FontScriptSuper)
+                writer.writeAttribute(QStringLiteral("val"), QStringLiteral("superscript"));
+            else
+                writer.writeAttribute(QStringLiteral("val"), QStringLiteral("subscript"));
+        }
+    }
+
+    if (format.hasProperty(FormatPrivate::P_Font_Size)) {
+        writer.writeEmptyElement(QStringLiteral("sz"));
+        writer.writeAttribute(QStringLiteral("val"), QString::number(format.fontSize()));
+    }
+
+    if (format.hasProperty(FormatPrivate::P_Font_Color)) {
+        XlsxColor color = format.property(FormatPrivate::P_Font_Color).value<XlsxColor>();
+        color.saveToXml(writer);
+    }
+
+    if (!format.fontName().isEmpty()) {
+        writer.writeEmptyElement(QStringLiteral("rFont"));
+        writer.writeAttribute(QStringLiteral("val"), format.fontName());
+    }
+    if (format.hasProperty(FormatPrivate::P_Font_Family)) {
+        writer.writeEmptyElement(QStringLiteral("family"));
+        writer.writeAttribute(QStringLiteral("val"), QString::number(format.intProperty(FormatPrivate::P_Font_Family)));
+    }
+
+    if (format.hasProperty(FormatPrivate::P_Font_Scheme)) {
+        writer.writeEmptyElement(QStringLiteral("scheme"));
+        writer.writeAttribute(QStringLiteral("val"), format.stringProperty(FormatPrivate::P_Font_Scheme));
+    }
 }
 QT_END_NAMESPACE_XLSX
 
