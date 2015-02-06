@@ -1,53 +1,84 @@
 #include "xlsxcomment.h"
+#include "xlsxcomment_p.h"
 #ifndef QT_NO_DEBUG_STREAM
 #include <QDebug>
 #endif
 QT_BEGIN_NAMESPACE_XLSX
+CommentPrivate::CommentPrivate(Comment* q)
+    :q_ptr(q)
+{}
+CommentPrivate::CommentPrivate(Comment* q, const QString& auth, const RichString& txt)
+    : q_ptr(q)
+    , m_Author(auth)
+    , m_Text(txt)
+{}
+CommentPrivate::CommentPrivate(Comment* q, const CommentPrivate& other)
+    : q_ptr(q)
+    , m_Author(other.m_Author)
+    , m_Text(other.m_Author)
+{}
 Comment::Comment(const QString& auth, const RichString& txt)
-	:m_Author(auth)
-	, m_Text(txt) {}
+:d_ptr(new CommentPrivate(this, auth, txt))
+{}
 Comment::Comment(const Comment &other)
-	: m_Author(other.m_Author)
-	, m_Text(other.m_Text)
+    : d_ptr(new CommentPrivate(this, *(other.d_ptr)))
 {}
 
-Comment::Comment() {}
+Comment::Comment() 
+    : d_ptr(new CommentPrivate(this))
+{}
 
-Comment& Comment::operator=(const Comment &other) {
-	m_Author = other.m_Author;
-	m_Text = other.m_Text;
-	return *this;
+Comment& Comment::operator=(const Comment &other)
+{
+    Q_D(Comment);
+    d->m_Author = other.author();
+    d->m_Text = other.text();
+    return *this;
 }
 
-const QString& Comment::author() const {
-	return m_Author;
+const QString& Comment::author() const
+{
+    Q_D(const Comment);
+    return d->m_Author;
 }
 
-const RichString& Comment::text() const {
-	return m_Text;
+const RichString& Comment::text() const
+{
+    Q_D(const Comment);
+    return d->m_Text;
 }
-void Comment::setAuthor(const QString& auth) {
-	m_Author = auth;
-}
-
-void Comment::setText(const RichString& txt) {
-	m_Text = txt;
-}
-Comment::~Comment() { }
-
-bool operator==(const Comment &rs1, const Comment &rs2) {
-	return
-		rs1.m_Author.compare(rs2.m_Author,Qt::CaseInsensitive) == 0
-		&& rs1.m_Text == rs2.m_Text
-	;
+void Comment::setAuthor(const QString& auth)
+{
+    Q_D(Comment);
+    d->m_Author = auth;
 }
 
-bool operator!=(const Comment &rs1, const Comment &rs2) {
-	return !(rs1 == rs2);
+void Comment::setText(const RichString& txt)
+{
+    Q_D(Comment);
+    d->m_Text = txt;
+}
+Comment::~Comment() {
+    if (d_ptr)
+        delete d_ptr;
+}
+
+bool operator==(const Comment &rs1, const Comment &rs2)
+{
+    return
+        rs1.author().compare(rs2.author(), Qt::CaseInsensitive) == 0
+        && rs1.text() == rs2.text()
+        ;
+}
+
+bool operator!=(const Comment &rs1, const Comment &rs2)
+{
+    return !(rs1 == rs2);
 }
 #ifndef QT_NO_DEBUG_STREAM
-Q_XLSX_EXPORT QDebug operator<<(QDebug dbg, const Comment &rs) {
-	return dbg << "Comment Author: " + rs.author() + " Comment Text: " + rs.text().toHtml();
+Q_XLSX_EXPORT QDebug operator<<(QDebug dbg, const Comment &rs)
+{
+    return dbg << "Comment Author: " + rs.author() + " Comment Text: " + rs.text().toHtml();
 }
 #endif
 QT_END_NAMESPACE_XLSX

@@ -7,24 +7,25 @@ class QXmlStreamWriter;
 QT_BEGIN_NAMESPACE_XLSX
 class CommentPrivate;
 class RichString;
-class Q_XLSX_EXPORT Comment {
+class Q_XLSX_EXPORT Comment
+{
+    Q_DECLARE_PRIVATE(Comment)
 public:
-	Comment();
-	explicit Comment(const QString& auth, const RichString& txt);
-	Comment(const Comment& other);
-	virtual ~Comment();
-	const QString& author() const;
-	const RichString& text() const;
-	void setAuthor(const QString& auth);
-	void setText(const RichString& txt);
-	Comment& operator=(const Comment &other);
+    Comment();
+    Comment(const QString& auth, const RichString& txt);
+    Comment(const Comment& other);
+    virtual ~Comment();
+    const QString& author() const;
+    const RichString& text() const;
+    void setAuthor(const QString& auth);
+    void setText(const RichString& txt);
+    Comment& operator=(const Comment &other);
 private:
-	QString m_Author;
-	RichString m_Text;
-	friend class Worksheet;
-	friend class WorksheetPrivate;
-	friend Q_XLSX_EXPORT bool operator==(const Comment &rs1, const Comment &rs2);
-	friend Q_XLSX_EXPORT bool operator!=(const Comment &rs1, const Comment &rs2);
+    CommentPrivate* d_ptr;
+    friend class Worksheet;
+    friend class WorksheetPrivate;
+    friend Q_XLSX_EXPORT bool operator==(const Comment &rs1, const Comment &rs2);
+    friend Q_XLSX_EXPORT bool operator!=(const Comment &rs1, const Comment &rs2);
 };
 Q_XLSX_EXPORT bool operator==(const Comment &rs1, const Comment &rs2);
 Q_XLSX_EXPORT bool operator!=(const Comment &rs1, const Comment &rs2);
