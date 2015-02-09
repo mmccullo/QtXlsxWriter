@@ -64,7 +64,7 @@ WorksheetPrivate::WorksheetPrivate(Worksheet *p, Worksheet::CreateFlag flag)
 , windowProtection(false), showFormulas(false), showGridLines(true), showRowColHeaders(true)
 , showZeros(true), rightToLeft(false), tabSelected(false), showRuler(false)
 , showOutlineSymbols(true), showWhiteSpace(true), urlPattern(QStringLiteral("^([fh]tt?ps?://)|(mailto:)|(file://)"))
-, comments(AbstractOOXmlFile::F_NewFromScratch)
+, comments(p,AbstractOOXmlFile::F_NewFromScratch)
 {
     previous_row = 0;
 
@@ -1471,7 +1471,7 @@ void WorksheetPrivate::saveXmlComments(QXmlStreamWriter &writer) const
     }
     if (idx == SheetsList.size()) return;
     relationships->addWorksheetRelationship(QStringLiteral("/comments"), QStringLiteral("../comments%1.xml").arg(idx + 1));
-    relationships->addWorksheetRelationship(QStringLiteral("/vmlDrawing"), QStringLiteral("../drawings/vmlDrawing%1.vml").arg(idx + 1));
+    relationships->addWorksheetRelationship(QStringLiteral("/vmlDrawing"), QStringLiteral("../drawings/commentBox%1.vml").arg(idx + 1));
     writer.writeEmptyElement(QStringLiteral("legacyDrawing"));
     writer.writeAttribute(QStringLiteral("r:id"), QStringLiteral("rId%1").arg(relationships->count()));
 }
@@ -2404,6 +2404,15 @@ const SpreadSheetComment& Worksheet::commentList() const
 {
     Q_D(const Worksheet);
     return d->comments;
+}
+
+QVariant Worksheet::readComment(int row, int column) const
+{   
+    QVariant result;
+    Q_D(const Worksheet);
+    if (d->comments.hasComment(row, column)) 
+        result.setValue(d->comments.getComment(row, column));
+    return result;
 }
 
 /*

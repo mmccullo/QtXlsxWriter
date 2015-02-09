@@ -16,6 +16,7 @@ CommentPrivate::CommentPrivate(Comment* q, const CommentPrivate& other)
     : q_ptr(q)
     , m_Author(other.m_Author)
     , m_Text(other.m_Text)
+    , m_Format(other.m_Format)
 {}
 Comment::Comment(const QString& auth, const RichString& txt)
 :d_ptr(new CommentPrivate(this, auth, txt))
@@ -33,6 +34,7 @@ Comment& Comment::operator=(const Comment &other)
     Q_D(Comment);
     d->m_Author = other.author();
     d->m_Text = other.text();
+    d->m_Format = other.format();
     return *this;
 }
 
@@ -61,6 +63,18 @@ void Comment::setText(const RichString& txt)
 Comment::~Comment() {
     if (d_ptr)
         delete d_ptr;
+}
+
+const CommentFormat& Comment::format() const
+{
+    Q_D(const Comment);
+    return d->m_Format;
+}
+
+void Comment::setFormat(const CommentFormat& val)
+{
+    Q_D(Comment);
+    d->m_Format = val;
 }
 
 bool operator==(const Comment &rs1, const Comment &rs2)

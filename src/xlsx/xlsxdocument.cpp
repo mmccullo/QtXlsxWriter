@@ -264,7 +264,7 @@ bool DocumentPrivate::savePackage(QIODevice *device) const
                 contentTypes->addCommentName(QStringLiteral("comments%1").arg(i + 1));
                 contentTypes->addDefault(QStringLiteral("vml"), QStringLiteral("application/vnd.openxmlformats-officedocument.vmlDrawing"));
                 zipWriter.addFile(QStringLiteral("xl/comments%1.xml").arg(i + 1), commList.saveToXmlData());
-                zipWriter.addFile(QStringLiteral("xl/drawings/vmlDrawing%1.vml").arg(i + 1), commList.saveShapeToXmlData());
+                zipWriter.addFile(QStringLiteral("xl/drawings/commentBox%1.vml").arg(i + 1), commList.saveShapeToXmlData());
             }
 
         }

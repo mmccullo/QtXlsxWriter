@@ -4,12 +4,23 @@
 #include "xlsxcellreference.h"
 #include <QXmlStreamWriter>
 #include <QBuffer>
+#include <QColor>
+#include <QSizeF>
 #include "xlsxcolor_p.h"
+#include "xlsxworksheet_p.h"
+#include "xlsxcommentformat.h"
+#include <QDebug>
 QT_BEGIN_NAMESPACE_XLSX
-SpreadSheetCommentPrivate::SpreadSheetCommentPrivate(SpreadSheetComment* p, 
+SpreadSheetCommentPrivate::SpreadSheetCommentPrivate(Worksheet* parShe,
+    SpreadSheetComment* p,
     SpreadSheetComment::CreateFlag flag)
     : AbstractOOXmlFilePrivate(p, flag)
+    , m_parentSheet(parShe)
 {}
+const Worksheet* SpreadSheetCommentPrivate::parentSheet()
+{
+    return m_parentSheet;
+}
 const Comment* SpreadSheetCommentPrivate::getComment(int row, int col) const
 {
     const QMap<int, Comment*>* colList = m_Comments.value(row, NULL);
@@ -159,6 +170,7 @@ void SpreadSheetComment::saveShapeToXmlFile(QIODevice *device) const
     writer.writeAttribute(QStringLiteral("xmlns:x"),
         QStringLiteral("urn:schemas-microsoft-com:office:excel"));
     writer.writeStartElement(QStringLiteral("o:shapelayout"));
+    writer.writeAttribute(QStringLiteral("v:ext"), QStringLiteral("edit"));
     writer.writeEmptyElement(QStringLiteral("o:idmap"));
     writer.writeAttribute(QStringLiteral("v:ext"), QStringLiteral("edit"));
     writer.writeAttribute(QStringLiteral("data"), QStringLiteral("1"));
@@ -179,35 +191,67 @@ void SpreadSheetComment::saveShapeToXmlFile(QIODevice *device) const
         i != d->comments().constEnd(); ++i) {
         for (QMap<int, Comment* >::const_iterator j = i.value()->constBegin();
             j != i.value()->constEnd(); ++j) {
+            Qt::Alignment currentAlign = j.value()->format().textAlign();
             writer.writeStartElement(QStringLiteral("v:shape"));
             writer.writeAttribute(QStringLiteral("id"), QStringLiteral("_x0000_s%1").arg(1024 + (++commentsCounters)));
             writer.writeAttribute(QStringLiteral("type"), QStringLiteral("#_x0000_t202"));
-            writer.writeAttribute(QStringLiteral("style"), QStringLiteral("position:absolute;margin-left:59.25pt;margin-top:1.5pt;width:108pt;height:59.25pt;z-index:1;visibility:hidden"));
-            writer.writeAttribute(QStringLiteral("fillcolor"), QStringLiteral("#ffffe1"));
-            writer.writeAttribute(QStringLiteral("o:insetmode"), QStringLiteral("#auto"));
+            qDebug() << d->m_parentSheet->columnWidth(1);
+            writer.writeAttribute(QStringLiteral("style"), 
+                QStringLiteral("position:absolute;margin-left:%1pt;margin-top:%2pt;width:108pt;height:59.25pt;z-index:%3;visibility:hidden")
+                .arg(11.25 + (48.0*static_cast<double>(j.key()))) //11.25 + (48 * (x:Column + 1))
+                .arg(qMax(1.5, (15.0*static_cast<double>(i.key() - 1)) -7.5)) // (15 * x:Row) -7.5
+                .arg(commentsCounters)
+            );
+            qDebug() << j.value()->format().backgroundColor().name();
+            writer.writeAttribute(QStringLiteral("fillcolor"), j.value()->format().backgroundColor().name());
+            writer.writeAttribute(QStringLiteral("o:insetmode"), QStringLiteral("auto"));
             writer.writeEmptyElement(QStringLiteral("v:fill"));
-            writer.writeAttribute(QStringLiteral("color2"), QStringLiteral("#ffffe1"));
+            writer.writeAttribute(QStringLiteral("color2"), j.value()->format().backgroundColor().name());
             writer.writeEmptyElement(QStringLiteral("v:shadow"));
-            writer.writeAttribute(QStringLiteral("on"), QStringLiteral("t"));
-            writer.writeAttribute(QStringLiteral("color"), QStringLiteral("black"));
+            writer.writeAttribute(QStringLiteral("on"), j.value()->format().showShadow() ? QStringLiteral("True") : QStringLiteral("False"));
+            writer.writeAttribute(QStringLiteral("color"), j.value()->format().shadowColor().name());
             writer.writeAttribute(QStringLiteral("obscured"), QStringLiteral("t"));
             writer.writeEmptyElement(QStringLiteral("v:path"));
             writer.writeAttribute(QStringLiteral("o:connecttype"), QStringLiteral("none"));
             writer.writeStartElement(QStringLiteral("v:textbox"));
             writer.writeAttribute(QStringLiteral("style"), QStringLiteral("mso-direction-alt:auto"));
             writer.writeEmptyElement(QStringLiteral("div"));
-            writer.writeAttribute(QStringLiteral("style"), QStringLiteral("text-align:left"));
+            writer.writeAttribute(QStringLiteral("style"), QStringLiteral("text-align:left")); //TODO
             writer.writeEndElement(); //v:textbox
             writer.writeStartElement(QStringLiteral("x:ClientData"));
             writer.writeAttribute(QStringLiteral("ObjectType"), QStringLiteral("Note"));
             writer.writeEmptyElement(QStringLiteral("x:MoveWithCells"));
             writer.writeEmptyElement(QStringLiteral("x:SizeWithCells"));
             writer.writeStartElement(QStringLiteral("x:Anchor"));
-            writer.writeCharacters(QStringLiteral("1, 15, 0, 2, 3, 31, 4, 1"));
+            writer.writeCharacters(
+                QStringLiteral("%1, 15, %2, 10, %3, 31, %4, 9")
+                .arg(j.key()) //x:Column +1
+                .arg(qMax(0, i.key() - 2)) //x:Row -1
+                .arg(j.key() + 2) //x:Column +3
+                .arg(i.key() + 2) //x:Row +3
+            );
             writer.writeEndElement(); //x:Anchor
             writer.writeStartElement(QStringLiteral("x:AutoFill"));
             writer.writeCharacters(QStringLiteral("False"));
             writer.writeEndElement(); //x:AutoFill
+            writer.writeStartElement(QStringLiteral("x:TextVAlign"));
+            if (currentAlign & Qt::AlignVCenter)
+                writer.writeCharacters(QStringLiteral("Center"));
+            else if (currentAlign & Qt::AlignBottom)
+                writer.writeCharacters(QStringLiteral("Bottom"));
+            else //Default to Top
+                writer.writeCharacters(QStringLiteral("Top"));
+            writer.writeEndElement(); //x:TextVAlign
+            writer.writeStartElement(QStringLiteral("x:TextHAlign"));
+            if (currentAlign & Qt::AlignHCenter)
+                writer.writeCharacters(QStringLiteral("Center"));
+            else if (currentAlign & Qt::AlignRight)
+                writer.writeCharacters(QStringLiteral("Right"));
+            else if (currentAlign & Qt::AlignJustify)
+                writer.writeCharacters(QStringLiteral("Justify"));
+            else //Default to Left
+                writer.writeCharacters(QStringLiteral("Left"));
+            writer.writeEndElement(); //x:TextHAlign
             writer.writeStartElement(QStringLiteral("x:Row"));
             writer.writeCharacters(QString::number(i.key()-1));
             writer.writeEndElement(); //x:Row
@@ -285,8 +329,8 @@ bool SpreadSheetComment::loadFromXmlFile(QIODevice *device)
 {
     return true;
 }
-SpreadSheetComment::SpreadSheetComment(CreateFlag flag)
-    : AbstractOOXmlFile(new SpreadSheetCommentPrivate(this, flag))
+SpreadSheetComment::SpreadSheetComment(Worksheet* parShe,CreateFlag flag)
+    : AbstractOOXmlFile(new SpreadSheetCommentPrivate(parShe,this, flag))
 {}
 
 bool SpreadSheetComment::hasComment(int row, int col) const

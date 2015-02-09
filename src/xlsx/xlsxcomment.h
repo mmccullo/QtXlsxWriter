@@ -7,6 +7,7 @@ class QXmlStreamWriter;
 QT_BEGIN_NAMESPACE_XLSX
 class CommentPrivate;
 class RichString;
+class CommentFormat;
 class Q_XLSX_EXPORT Comment
 {
     Q_DECLARE_PRIVATE(Comment)
@@ -20,6 +21,8 @@ public:
     void setAuthor(const QString& auth);
     void setText(const RichString& txt);
     Comment& operator=(const Comment &other);
+    const CommentFormat& format() const;
+    void setFormat(const CommentFormat& val);
 private:
     CommentPrivate* d_ptr;
     friend class Worksheet;

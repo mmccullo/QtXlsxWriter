@@ -1,8 +1,9 @@
 #ifndef xlsxcomment_p_h__
 #define xlsxcomment_p_h__
 #include "xlsxcomment.h"
+#include "xlsxcommentformat.h"
 QT_BEGIN_NAMESPACE_XLSX
-class CommentPrivate
+class XLSX_AUTOTEST_EXPORT CommentPrivate
 {
 private:
     Q_DECLARE_PUBLIC(Comment)
@@ -13,6 +14,7 @@ public:
     CommentPrivate(Comment* q, const CommentPrivate& other);
     QString m_Author;
     RichString m_Text;
+    CommentFormat m_Format;
 };
 QT_END_NAMESPACE_XLSX
 #endif // xlsxcomment_p_h__

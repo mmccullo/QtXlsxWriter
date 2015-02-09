@@ -7,7 +7,7 @@ class CellReference;
 class SpreadSheetCommentPrivate;
 class Worksheet;
 class WorksheetPrivate;
-class Q_XLSX_EXPORT SpreadSheetComment : public AbstractOOXmlFile
+class XLSX_AUTOTEST_EXPORT SpreadSheetComment : public AbstractOOXmlFile
 {
     Q_DECLARE_PRIVATE(SpreadSheetComment)
 public:
@@ -30,7 +30,7 @@ public:
     bool isEmpty() const;
 private:
     bool hasRow(int row) const;
-    SpreadSheetComment(CreateFlag flag);
+    SpreadSheetComment(Worksheet* parShe,CreateFlag flag);
     SpreadSheetComment(const SpreadSheetComment& other);
     //same as SharedStrings::writeRichStringPart_rPr that method should be either global or into RichString
     void writeRichStringPart_rPr(QXmlStreamWriter &writer, const Format &format) const;

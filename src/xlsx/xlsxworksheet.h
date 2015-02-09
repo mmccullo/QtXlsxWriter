@@ -89,6 +89,7 @@ public:
     bool writeComment(int row, int column, const Comment& value);
     bool writeComment(int row, int column, const QString& auth, const RichString& txt);
     bool writeComment(const CellReference &row_column, const QString& auth, const RichString& txt);
+    QVariant readComment(int row, int column) const;
 
     bool addDataValidation(const DataValidation &validation);
     bool addConditionalFormatting(const ConditionalFormatting &cf);
