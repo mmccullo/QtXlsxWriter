@@ -40,6 +40,10 @@
 #include <QBuffer>
 #include <QDir>
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+#include <QtCore5Compat/QStringRef>
+#endif
+
 QT_BEGIN_NAMESPACE_XLSX
 
 WorkbookPrivate::WorkbookPrivate(Workbook *q, Workbook::CreateFlag flag) :
@@ -566,7 +570,11 @@ bool Workbook::loadFromXmlFile(QIODevice *device)
                  const QString name = attributes.value(QLatin1String("name")).toString();
                  int sheetId = attributes.value(QLatin1String("sheetId")).toString().toInt();
                  const QString rId = attributes.value(QLatin1String("r:id")).toString();
-                 const QStringRef &stateString = attributes.value(QLatin1String("state"));
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+                 const QStringRef& stateString = attributes.value(QLatin1String("state"));
+#else
+                 QStringView stateString = attributes.value(QLatin1String("state"));
+#endif
                  AbstractSheet::SheetState state = AbstractSheet::SS_Visible;
                  if (stateString == QLatin1String("hidden"))
                      state = AbstractSheet::SS_Hidden;

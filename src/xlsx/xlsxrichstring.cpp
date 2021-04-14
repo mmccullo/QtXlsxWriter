@@ -104,7 +104,11 @@ RichString &RichString::operator =(const RichString &other)
 */
 RichString::operator QVariant() const
 {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+	return QVariant(QMetaType::fromType<RichString>(), this);
+#else
     return QVariant(qMetaTypeId<RichString>(), this);
+#endif
 }
 
 /*!

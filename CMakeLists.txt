@@ -16,12 +16,25 @@ file(
   ${CMAKE_CURRENT_BINARY_DIR}/QtXlsxWriterTest_automoc.cpp
 )
 
-find_package(Qt5 5.5 REQUIRED Core Gui Test)
-include_directories(
-	${CMAKE_CURRENT_SOURCE_DIR}/src/xlsx/
-	${Qt5Core_INCLUDE_DIRS} 
-	${Qt5Gui_INCLUDE_DIRS}
-	${Qt5Gui_PRIVATE_INCLUDE_DIRS} )
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+find_package(Qt6 COMPONENTS Core Gui Core5Compat Test)
+
+if (Qt6_FOUND)
+	include_directories(
+		${CMAKE_CURRENT_SOURCE_DIR}/src/xlsx/
+		${Qt6Core_INCLUDE_DIRS} 
+		${Qt6Gui_INCLUDE_DIRS}
+		${Qt6Gui_PRIVATE_INCLUDE_DIRS} )
+else()
+	find_package(Qt5 COMPONENTS Core Gui Test REQUIRED)
+	include_directories(
+		${CMAKE_CURRENT_SOURCE_DIR}/src/xlsx/
+		${Qt5Core_INCLUDE_DIRS} 
+		${Qt5Gui_INCLUDE_DIRS}
+		${Qt5Gui_PRIVATE_INCLUDE_DIRS} )
+endif()
 
 add_library(QtXlsxWriter SHARED "${QtXlsxWriter_SOURCE_FILES}")
 
@@ -31,8 +44,14 @@ if(NOT MSVC)
 endif()
 
 set_target_properties(QtXlsxWriter PROPERTIES DEBUG_POSTFIX "d")
-target_link_libraries(QtXlsxWriter ${Qt5Core_LIBRARIES})
-target_link_libraries(QtXlsxWriter ${Qt5Gui_LIBRARIES})
+
+if (Qt6_FOUND)
+	target_link_libraries(QtXlsxWriter ${Qt6Core_LIBRARIES})
+	target_link_libraries(QtXlsxWriter ${Qt6Gui_LIBRARIES})
+else()
+	target_link_libraries(QtXlsxWriter ${Qt5Core_LIBRARIES})
+	target_link_libraries(QtXlsxWriter ${Qt5Gui_LIBRARIES})
+endif()
 
 target_include_directories(QtXlsxWriter
   INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/xlsx
